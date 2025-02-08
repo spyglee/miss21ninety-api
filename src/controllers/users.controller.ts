@@ -12,11 +12,13 @@ export class UserController {
       const existingUser = await UserModel.findOne({ email })
 
       if (existingUser) {
-        return res.status(400).json({ error: 'User already exists' })
+        res.status(400).json({ error: 'User already exists' })
+        return
       }
 
       if (password !== confirmPassword) {
-        return res.status(400).json({ error: 'Passwords do not match' })
+        res.status(400).json({ error: 'Passwords do not match' })
+        return
       }
 
       const salt = await bcrypt.genSalt(10)
@@ -38,20 +40,22 @@ export class UserController {
     }
   }
 
-  static async login(req: Request<{}, {}, LoginSchema>, res: Response) {
+  static async login(req: Request<{}, {}, LoginSchema>, res: Response): Promise<void> {
     try {
       const { email, password } = req.body
 
       const user = await UserModel.findOne({ email })
 
       if (!user) {
-        return res.status(400).json({ error: 'Invalid email or password' })
+        res.status(400).json({ error: 'Invalid email or password' })
+        return
       }
 
       const isPasswordValid = await bcrypt.compare(password, user.password)
 
       if (!isPasswordValid) {
-        return res.status(400).json({ error: 'Invalid email or password' })
+        res.status(400).json({ error: 'Invalid email or password' })
+        return
       }
 
       const token = generateToken({ email, id: user._id })
@@ -75,7 +79,8 @@ export class UserController {
       const user = await validateTokenAndGetUser(token)
 
       if (!user) {
-        return res.status(401).json({ error: 'Unauthorized' })
+        res.status(401).json({ error: 'Unauthorized' })
+        return
       }
 
       res.json({
